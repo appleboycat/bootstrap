@@ -364,10 +364,11 @@ $(function () {
   })
 
   QUnit.test('should add position class before positioning so that position-specific styles are taken into account', function (assert) {
-    assert.expect(1)
+    assert.expect(2)
+    var done = assert.async()
     var styles = '<style>'
-      + '.tooltip.right { white-space: nowrap; }'
-      + '.tooltip.right .tooltip-inner { max-width: none; }'
+      + '.bs-tooltip-right { white-space: nowrap; }'
+      + '.bs-tooltip-right .tooltip-inner { max-width: none; }'
       + '</style>'
     var $styles = $(styles).appendTo('head')
 
@@ -375,21 +376,19 @@ $(function () {
     var $target = $('<a href="#" rel="tooltip" title="very very very very very very very very long tooltip in one line"/>')
       .appendTo($container)
       .bootstrapTooltip({
-        placement: 'right'
+        placement: 'right',
+        trigger: 'manual'
+      })
+      .on('inserted.bs.tooltip', function () {
+        var $tooltip = $($(this).data('bs.tooltip').tip)
+        assert.ok($tooltip.hasClass('bs-tooltip-right'))
+        assert.ok($tooltip.attr('style') === undefined)
+        $(this).bootstrapTooltip('hide')
+        $container.remove()
+        $styles.remove()
+        done()
       })
       .bootstrapTooltip('show')
-
-    var $tooltip = $($target.data('bs.tooltip').tip)
-
-    // this is some dumb hack stuff because sub pixels in firefox
-    var top = Math.round($target.offset().top + $target[0].offsetHeight / 2 - $tooltip[0].offsetHeight / 2)
-    var top2 = Math.round($tooltip.offset().top)
-    var topDiff = top - top2
-    assert.ok(topDiff <= 1 && topDiff >= -1)
-    $target.bootstrapTooltip('hide')
-
-    $container.remove()
-    $styles.remove()
   })
 
   QUnit.test('should use title attribute for tooltip text', function (assert) {
